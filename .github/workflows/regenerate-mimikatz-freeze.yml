@@ -1,0 +1,32 @@
+name: Regenerate Mimikatz freeze snapshot
+
+on:
+  push:
+    branches:
+      - automation/regenerate-mimikatz-freeze
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install capa
+        run: pip install -e ".[dev]"
+      - name: Regenerate snapshot
+        run: |
+          python -m capa.features.freeze --reproducible \
+            tests/data/mimikatz.exe_ \
+            "$RUNNER_TEMP/mimikatz-exe.frz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mimikatz-freeze-snapshot
+          path: ${{ runner.temp }}/mimikatz-exe.frz
+          if-no-files-found: error
